@@ -6,13 +6,13 @@ import enum
 class DroneSpecs(enum.Enum):
     speed = 30  # km/h
     max_range = 30  # in km
-    max_flight_time = 40    # in min
+    max_flight_time = 4    # in min
 
 
 class ConversionsUnits(enum.Enum):
-    km_per_block = 2.5 / 256
+    km_per_block = 2.5 / 16
     travel_time_block = 1/(km_per_block * 1000) * (DroneSpecs.speed.value/3.6)  # Time in seconds
-    research_time_block = 1    # time in seconds
+    research_time_block = 16    # time in seconds
     km_to_blocks = (1/km_per_block)
 
 
@@ -138,7 +138,7 @@ class RunModel:
             print("Could not reach target area")
         elif j.total_travel == -2:
             print("Work area is too big\n")
-        elif j.enough_flight_time():
+        elif  not j.enough_flight_time():
             print("Battery life not sufficient")
         else:
             print("Area fully scouted, total traveled distance: %s" % j.total_travel)
@@ -167,8 +167,10 @@ class RunModel:
             for j in drones:
                 j.full_scout()
                 # Check if every drone was able to scout its area
+                if j.total_travel < 0:
+                    failed = True
                 # Check if drone has enough battery life
-                if j.total_travel < 0 | j.enough_flight_time():
+                if not j.enough_flight_time():
                     failed = True
 
                 # Check which drone covered the most ground
@@ -187,4 +189,4 @@ class RunModel:
 
 
 x = RunModel()
-x.run_sim(256, 8, False)
+x.run_sim(16, 3, True)
