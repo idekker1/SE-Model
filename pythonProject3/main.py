@@ -122,7 +122,8 @@ class RunModel:
         elif j.total_travel == -2:
             print("Work area is too big\n")
         else:
-            print("Area fully scouted, total traveled distance: %s" % j.total_travel, "\n")
+            print("Area fully scouted, total traveled distance: %s" % j.total_travel)
+            print("Total time: %s"%(self.conv.researchBlocks_to_time(j.search_distance) + 2 * self.conv.travelBlocks_to_time(j.travel_distance)), "\n")
     def run_sim(self, area_size, iterations, log):
         print("start of simulation")
         print("Size of area in blocks: %s x %s" % (area_size, area_size))
