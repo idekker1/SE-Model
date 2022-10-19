@@ -5,19 +5,20 @@ import enum
 
 class DroneSpecs(enum.Enum):
     speed = 30  # km/h
-    max_range = 200  # in blocks
+    max_range = 30  # in km
 
 
 class ConversionsUnits(enum.Enum):
-    km_per_block = 10/256
-    travel_time_block = 1/DroneSpecs.speed.value
-    research_time_block = 15
+    km_per_block = 2.5 / 256
+    travel_time_block = 1/(km_per_block * 1000) * (DroneSpecs.speed.value/3.6)  # Time in seconds
+    research_time_block = 1    # time in seconds
+    km_to_blocks = (1/km_per_block)
 
 
 class Drone:
-    def __init__(self, st, bl, grid, start, boat):
+    def __init__(self, st, grid, start, boat):
         self.scout_time = st
-        self.battery_life = bl
+        self.battery_life = DroneSpecs.max_range.value * ConversionsUnits.km_to_blocks.value
         self.work_area = grid
         self.start_position = start
         self.boat_position = boat
@@ -25,6 +26,8 @@ class Drone:
         self.total_travel = 0
         self.search_distance = 0
         self.travel_distance = 0
+
+        self.travel_time = 0;
         self.empty = False
 
     def get_to_start(self):
@@ -40,16 +43,22 @@ class Drone:
 
     def scout_area(self):
         x = self.work_area.shape
-        size = x[0] * x[1]
+        self.search_distance = x[0] * x[1]
 
-        if self.battery_life - size - self.travel_distance < 0:
+        if self.battery_life - self.search_distance - self.travel_distance < 0:
             self.empty = True
             return
 
-        self.total_travel = self.total_travel + size
+        self.total_travel = self.total_travel + self.search_distance
 
     def return_to_base(self):
         self.total_travel = self.total_travel + self.travel_distance
+
+    def calc_travel_time(self):
+        conv = Conversions()
+        search_t = conv.researchBlocks_to_time(self.search_distance)
+        travel_t = 2 * conv.travelBlocks_to_time(self.travel_distance)
+        self.travel_time = search_t + travel_t
 
     def full_scout(self):
         self.get_to_start()
@@ -63,6 +72,7 @@ class Drone:
             return
 
         self.return_to_base()
+        self.calc_travel_time()
 
 
 # For the first version it is assumed that n and dn are both multiples of 2.
@@ -90,7 +100,7 @@ class Area:
         boat_pos = (int(self.n / 2), int(self.n / 2))
         result = []
         for i in self.segments:
-            result.append(Drone(1, DroneSpecs.max_range.value, self.segments[i], i, boat_pos))
+            result.append(Drone(1, self.segments[i], i, boat_pos))
 
         return result
 
@@ -123,16 +133,17 @@ class RunModel:
             print("Work area is too big\n")
         else:
             print("Area fully scouted, total traveled distance: %s" % j.total_travel)
-            print("Total time: %s"%(self.conv.researchBlocks_to_time(j.search_distance) + 2 * self.conv.travelBlocks_to_time(j.travel_distance)), "\n")
+            print("Total time: %s" % (j.travel_time), "\n")
+
     def run_sim(self, area_size, iterations, log):
         print("start of simulation")
         print("Size of area in blocks: %s x %s" % (area_size, area_size))
-        print("Size in km: %s x %s" % (self.conv.blocks_to_distance(area_size),self.conv.blocks_to_distance(area_size)))
+        print(
+            "Size in km: %s x %s" % (self.conv.blocks_to_distance(area_size), self.conv.blocks_to_distance(area_size)))
 
-
-        # Number of tests that are executed
+        # run multiple tests, for every run the number of drones is multiplied by 2
         for i in range(iterations):
-            print("\nExperiment %s"% i)
+            print("\nExperiment %s" % i)
 
             # generate 2^i drones
             area = Area(area_size, 2 ** i)
@@ -149,9 +160,9 @@ class RunModel:
                 # Check if every drone was able to scout its area
                 if j.total_travel < 0:
                     failed = True
-                    continue
+
                 # Check which drone covered the most ground
-                if j.total_travel > d.total_travel:
+                if j.travel_time > d.travel_time:
                     d = j
 
                 if log:
@@ -159,12 +170,11 @@ class RunModel:
                 count += 1  # Counter for the number of drones
 
             if not failed:
-                time = self.conv.researchBlocks_to_time(d.search_distance) + 2 * self.conv.travelBlocks_to_time(d.travel_distance)
-                print("Time to cover whole area using %s drones: %s"%(2 ** i, time))
+                print("Time to cover whole area using %s drones: %s" % (2 ** i, d.travel_time), "seconds")
 
             else:
                 print("Simulation failed")
 
 
 x = RunModel()
-x.run_sim(16, 4, True)
+x.run_sim(256, 8, False)
