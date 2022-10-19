@@ -6,6 +6,7 @@ import enum
 class DroneSpecs(enum.Enum):
     speed = 30  # km/h
     max_range = 30  # in km
+    max_flight_time = 40    # in min
 
 
 class ConversionsUnits(enum.Enum):
@@ -16,9 +17,9 @@ class ConversionsUnits(enum.Enum):
 
 
 class Drone:
-    def __init__(self, st, grid, start, boat):
-        self.scout_time = st
+    def __init__(self, grid, start, boat):
         self.battery_life = DroneSpecs.max_range.value * ConversionsUnits.km_to_blocks.value
+        self.max_flight_time = DroneSpecs.max_flight_time.value     # Time in minutes
         self.work_area = grid
         self.start_position = start
         self.boat_position = boat
@@ -60,6 +61,12 @@ class Drone:
         travel_t = 2 * conv.travelBlocks_to_time(self.travel_distance)
         self.travel_time = search_t + travel_t
 
+    def enough_flight_time(self):
+        if self.travel_time/60 > self.max_flight_time:
+            return False
+
+        return True
+
     def full_scout(self):
         self.get_to_start()
         if self.empty:
@@ -100,7 +107,7 @@ class Area:
         boat_pos = (int(self.n / 2), int(self.n / 2))
         result = []
         for i in self.segments:
-            result.append(Drone(1, self.segments[i], i, boat_pos))
+            result.append(Drone(self.segments[i], i, boat_pos))
 
         return result
 
@@ -131,6 +138,8 @@ class RunModel:
             print("Could not reach target area")
         elif j.total_travel == -2:
             print("Work area is too big\n")
+        elif j.enough_flight_time():
+            print("Battery life not sufficient")
         else:
             print("Area fully scouted, total traveled distance: %s" % j.total_travel)
             print("Total time: %s" % (j.travel_time), "\n")
@@ -158,7 +167,8 @@ class RunModel:
             for j in drones:
                 j.full_scout()
                 # Check if every drone was able to scout its area
-                if j.total_travel < 0:
+                # Check if drone has enough battery life
+                if j.total_travel < 0 | j.enough_flight_time():
                     failed = True
 
                 # Check which drone covered the most ground
