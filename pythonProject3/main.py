@@ -48,7 +48,7 @@ class Drone:
         # Specs give the max flight time in minutes which is used here
         # Unit: minutes
         # Note: if not specified make it MAX_VALUE otherwise the simulation fails.
-        self.max_time = DroneSpecs.max_time.value  
+        self.max_time = DroneSpecs.max_flight_time.value
         self.work_area = grid
         self.start_position = start
         self.boat_position = boat
