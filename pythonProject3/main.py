@@ -10,7 +10,7 @@ import enum
 grid_size = 256
 area_in_km = 2.5
 iterations = 8
-logging = False
+logging = True
 
 
 # Current specs based on the DJI Mavic 3 drone
@@ -185,7 +185,7 @@ class RunModel:
         dist = abs(j.start_position[0] - j.boat_position[0])
 
         print("\ndrone %s" % count)
-        print("battery: %s" % j.battery_life, " ,grid size: %s" % size, " ,Travel distance: %s" % (2 * dist))
+        print("battery: %s" % j.max_time, " ,grid size: %s" % size, " ,Travel distance: %s" % (2 * dist))
         if j.total_travel == -1:
             print("Could not reach target area")
         elif j.total_travel == -2:
