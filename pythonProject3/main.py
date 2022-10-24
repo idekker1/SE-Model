@@ -9,15 +9,15 @@ import enum
 # logging: enables or disables logging mode
 grid_size = 256
 area_in_km = 2.5
-iterations = 8
-logging = True
+iterations = 6
+logging = False
 
 
 # Current specs based on the DJI Mavic 3 drone
 class DroneSpecs(enum.Enum):
-    speed = 30  # km/h
-    max_range = 30  # in km
-    max_flight_time = 40  # in min
+    speed = 45  # km/h
+    max_range = 100  # in km
+    max_flight_time = 120  # in min
 
 
 class ConversionsUnits(enum.Enum):
@@ -31,7 +31,7 @@ class ConversionsUnits(enum.Enum):
     travel_time_block = 1 / (km_per_block * 1000) * (DroneSpecs.speed.value / 3.6)  # Time in seconds
     
     # Assumption is that it takes 1 sec to scout a single block
-    research_time_block = 1  # time in seconds
+    research_time_block = 1/10  # time in seconds
     
     # Conversion factor to convert blocks to actual distance
     # Units: 1 / (km / blocks) = block / km
@@ -185,7 +185,7 @@ class RunModel:
         dist = abs(j.start_position[0] - j.boat_position[0])
 
         print("\ndrone %s" % count)
-        print("battery: %s" % j.max_time, " ,grid size: %s" % size, " ,Travel distance: %s" % (2 * dist))
+        print("battery: %s" % j.max_distance, " ,grid size: %s" % size, " ,Travel distance: %s" % (2 * dist))
         if j.total_travel == -1:
             print("Could not reach target area")
         elif j.total_travel == -2:
@@ -234,7 +234,7 @@ class RunModel:
                 count += 1  # Counter for the number of drones
 
             if not failed:
-                print("Time to cover whole area using %s drones: %s" % (2 ** i, d.travel_time), "seconds")
+                print("Time to cover whole area using %s drones: %s = %s minutes" % (2 ** i, d.travel_time, d.travel_time/60))
 
             else:
                 print("Simulation failed")
