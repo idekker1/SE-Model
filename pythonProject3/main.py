@@ -16,8 +16,8 @@ logging = False
 # Current specs based on the DJI Mavic 3 drone
 class DroneSpecs(enum.Enum):
     speed = 45  # km/h
-    max_range = 100  # in km
-    max_flight_time = 120  # in min
+    max_range = 100 # in km
+    max_flight_time = 40  # in min
 
 
 class ConversionsUnits(enum.Enum):
